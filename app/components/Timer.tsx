@@ -52,14 +52,14 @@ const Timer: React.FC = () => {
           setTimeout(() => {
             setTime(resetTime);
             setIsRunning(true); // Ensure the timer is running for the new loop
-          }, 4000); // Adjust this delay to match your sound duration
+          }, 13000); // Adjust this delay to match your sound duration
         } else if (loopCount && loopCount > 0) {
           setLoopCount(loopCount - 1);
           // Start a new loop after sound plays
           setTimeout(() => {
             setTime(resetTime);
             setIsRunning(true); // Ensure the timer is running for the new loop
-          }, 4000); // Adjust this delay to match your sound duration
+          }, 13000); // Adjust this delay to match your sound duration
         }
       }
     }
@@ -112,7 +112,7 @@ const Timer: React.FC = () => {
       audio.pause();
       audio.currentTime = 0; // Reset audio position
       setSoundPlaying(false); // Reset soundPlaying when sound stops
-    }, 4000);
+    }, 13000);
   };
 
   // Determine the status message
