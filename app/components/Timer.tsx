@@ -28,6 +28,8 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
+import { useRef } from "react";
+
 
 const theme = createTheme({
   components: {
@@ -56,6 +58,8 @@ const Timer: React.FC = () => {
   const [currentTime, setCurrentTime] = useState<string>("");
   const [soundType, setSoundType] = useState<string>("original"); // 'original' or 'custom'
   const [customText, setCustomText] = useState<string>("");
+  const audioRef = useRef<HTMLAudioElement | null>(null); // เพิ่มที่นี่
+
 
   // เพิ่ม state สำหรับ Dialog
   const [openDialog, setOpenDialog] = useState<boolean>(false);
@@ -112,7 +116,7 @@ const Timer: React.FC = () => {
           setTimeout(() => {
             setTime(resetTime);
             setIsRunning(true);
-          }, 5000);
+          }, 15000);
         }
         if (loopCount && loopCount > 0) {
           setLoopCount(loopCount - 1);
@@ -149,11 +153,20 @@ const Timer: React.FC = () => {
     }
   };
 
+  const stopSound = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    window.speechSynthesis.cancel();
+  };
+  
   const stopTimer = () => {
     setIsRunning(false);
     setRemainingTime(time);
+    stopSound(); // หยุดเสียงเมื่อหยุดการทำงานของ timer
   };
-
+  
   const resetTimer = () => {
     setIsRunning(false);
     setTime(0);
@@ -166,38 +179,58 @@ const Timer: React.FC = () => {
     setLoopForever(false);
     setSoundType("original");
     setCustomText("");
+    stopSound(); // หยุดเสียงเมื่อรีเซ็ต timer
   };
 
   const playSound = () => {
     if (soundType === "original") {
-      const audio = new Audio("/sound/notification.mp3");
-      audio.currentTime = 0;
-
-      audio
-        .play()
-        .then(() => {
-          setSoundPlaying(true);
-        })
-        .catch((error) => {
-          console.error("Audio play failed:", error);
-          alert("Please interact with the page to enable sound.");
-        });
-
-      setTimeout(() => {
-        audio.pause();
-        audio.currentTime = 0;
-        setSoundPlaying(false);
-      }, 13000);
+      if (!audioRef.current) {
+        audioRef.current = new Audio("/sound/notification.mp3");
+      }
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current
+          .play()
+          .then(() => {
+            setSoundPlaying(true);
+          })
+          .catch((error) => {
+            console.error("Audio play failed:", error);
+            alert("Please interact with the page to enable sound.");
+          });
+  
+        setTimeout(() => {
+          if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+          }
+          setSoundPlaying(false);
+        }, 13000);
+      }
     } else if (soundType === "custom" && customText) {
-      const utterance = new SpeechSynthesisUtterance(customText);
-
-      // ตั้งค่าภาษาเป็นภาษาไทย
-      utterance.lang = "th-TH";
-
-      window.speechSynthesis.speak(utterance);
+      let repeatCount = 0;
+      
+      const speakText = () => {
+        if (repeatCount < 3) {
+          const utterance = new SpeechSynthesisUtterance(customText);
+  
+          // ตั้งค่าภาษาเป็นภาษาไทย
+          utterance.lang = "th-TH";
+  
+          utterance.onend = () => {
+            setTimeout(() => {
+              repeatCount += 1;
+              speakText(); // เรียกใช้ฟังก์ชันอีกครั้งเพื่อพูดทวนหลังจากเว้นช่วง
+            }, 2000); // เว้นช่วง 2 วินาทีระหว่างรอบ
+          };
+  
+          window.speechSynthesis.speak(utterance);
+        }
+      };
+  
+      speakText(); // เริ่มพูด
     }
   };
-
   const getStatusMessage = () => {
     if (loopForever) {
       return "Running timer loop forever until stopped.";
@@ -227,20 +260,6 @@ const Timer: React.FC = () => {
           variant="body1"
           sx={{
             position: "absolute",
-            top: 0,
-            right: 0,
-            margin: "20px",
-            textAlign: "right",
-            fontSize: 18,
-          }}
-        >
-          {currentTime}
-        </Typography>
-
-        <Typography
-          variant="body1"
-          sx={{
-            position: "absolute",
             top: 20,
             left: 20,
             margin: "0px",
@@ -261,11 +280,26 @@ const Timer: React.FC = () => {
               position: "absolute",
               top: "20px",
               bottom: "20px",
-              right: 20,
+              right: 0,
               justifyContent: "center",
               flexDirection: "row",
             }}
           >
+            <Grid item>
+              <Typography
+                variant="body1"
+                sx={{
+                  position: "absolute",
+                  top: 0,
+                  right: 0,
+                  margin: "20px",
+                  textAlign: "right",
+                  fontSize: 17,
+                }}
+              >
+                {currentTime}
+              </Typography>
+            </Grid>
             <Grid item>
               <Box
                 sx={{
@@ -303,7 +337,7 @@ const Timer: React.FC = () => {
                   marginTop: "0px",
                   marginBottom: "0px",
                   textAlign: "center",
-                  width: "1500px",
+                  width: "2500px",
                 }}
               >
                 <Grid container spacing={2} justifyContent="center">
