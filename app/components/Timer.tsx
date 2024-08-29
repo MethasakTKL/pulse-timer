@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   TextField,
   Grid,
@@ -44,6 +44,9 @@ const Timer: React.FC = () => {
   const [loopCount, setLoopCount] = useState<number | null>(null);
   const [loopForever, setLoopForever] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<string>("");
+
+  // Use ref to keep track of the audio object
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const updateTime = () => {
@@ -128,6 +131,7 @@ const Timer: React.FC = () => {
   const stopTimer = () => {
     setIsRunning(false);
     setRemainingTime(time);
+    stopSound(); // Stop sound when stopping the timer
   };
 
   const resetTimer = () => {
@@ -140,11 +144,16 @@ const Timer: React.FC = () => {
     setRemainingTime(0);
     setLoopCount(null);
     setLoopForever(false);
+    stopSound(); // Stop sound when resetting the timer
   };
 
   const playSound = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
     const audio = new Audio("/sound/notification.mp3");
-    audio.currentTime = 0;
+    audioRef.current = audio; // Save audio reference
 
     audio
       .play()
@@ -161,6 +170,14 @@ const Timer: React.FC = () => {
       audio.currentTime = 0;
       setSoundPlaying(false);
     }, 13000);
+  };
+
+  const stopSound = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setSoundPlaying(false);
+    }
   };
 
   const getStatusMessage = () => {
