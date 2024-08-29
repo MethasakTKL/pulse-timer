@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   TextField,
   Grid,
@@ -12,13 +12,23 @@ import {
   FormControlLabel,
   Box,
   Paper,
+  RadioGroup,
+  Radio,
+  FormControl,
+  FormLabel,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import StopIcon from "@mui/icons-material/Stop";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+} from "@mui/material";
 
-// Custom theme for consistent icon button sizes
 const theme = createTheme({
   components: {
     MuiIconButton: {
@@ -44,10 +54,21 @@ const Timer: React.FC = () => {
   const [loopCount, setLoopCount] = useState<number | null>(null);
   const [loopForever, setLoopForever] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<string>("");
+  const [soundType, setSoundType] = useState<string>("original"); // 'original' or 'custom'
+  const [customText, setCustomText] = useState<string>("");
 
-  // Use ref to keep track of the audio object
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  // เพิ่ม state สำหรับ Dialog
+  const [openDialog, setOpenDialog] = useState<boolean>(false);
 
+  // ฟังก์ชันเปิด Dialog
+  const handleClickOpen = () => {
+    setOpenDialog(true);
+  };
+
+  // ฟังก์ชันปิด Dialog
+  const handleClose = () => {
+    setOpenDialog(false);
+  };
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
@@ -91,7 +112,7 @@ const Timer: React.FC = () => {
           setTimeout(() => {
             setTime(resetTime);
             setIsRunning(true);
-          }, 13000);
+          }, 5000);
         }
         if (loopCount && loopCount > 0) {
           setLoopCount(loopCount - 1);
@@ -131,7 +152,6 @@ const Timer: React.FC = () => {
   const stopTimer = () => {
     setIsRunning(false);
     setRemainingTime(time);
-    stopSound(); // Stop sound when stopping the timer
   };
 
   const resetTimer = () => {
@@ -144,39 +164,37 @@ const Timer: React.FC = () => {
     setRemainingTime(0);
     setLoopCount(null);
     setLoopForever(false);
-    stopSound(); // Stop sound when resetting the timer
+    setSoundType("original");
+    setCustomText("");
   };
 
   const playSound = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-    const audio = new Audio("/sound/notification.mp3");
-    audioRef.current = audio; // Save audio reference
-
-    audio
-      .play()
-      .then(() => {
-        setSoundPlaying(true);
-      })
-      .catch((error) => {
-        console.error("Audio play failed:", error);
-        alert("Please interact with the page to enable sound.");
-      });
-
-    setTimeout(() => {
-      audio.pause();
+    if (soundType === "original") {
+      const audio = new Audio("/sound/notification.mp3");
       audio.currentTime = 0;
-      setSoundPlaying(false);
-    }, 13000);
-  };
-
-  const stopSound = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      setSoundPlaying(false);
+  
+      audio
+        .play()
+        .then(() => {
+          setSoundPlaying(true);
+        })
+        .catch((error) => {
+          console.error("Audio play failed:", error);
+          alert("Please interact with the page to enable sound.");
+        });
+  
+      setTimeout(() => {
+        audio.pause();
+        audio.currentTime = 0;
+        setSoundPlaying(false);
+      }, 13000);
+    } else if (soundType === "custom" && customText) {
+      const utterance = new SpeechSynthesisUtterance(customText);
+  
+      // ตั้งค่าภาษาเป็นภาษาไทย
+      utterance.lang = "th-TH";
+  
+      window.speechSynthesis.speak(utterance);
     }
   };
 
@@ -199,12 +217,12 @@ const Timer: React.FC = () => {
           marginTop: "20px",
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
+          justifyContent: "flex-end", // Align content at the bottom
           alignItems: "center",
-          height: "100vh",
+          minHeight: "100vh", // Ensure container takes at least full viewport height
+          overflowY: "auto", // Allow vertical scrolling if content exceeds viewport height
         }}
       >
-        {/* Current Date & Time */}
         <Typography
           variant="body1"
           sx={{
@@ -235,105 +253,208 @@ const Timer: React.FC = () => {
           />
         </Typography>
 
-        <Box sx={{ marginBottom: "20px", textAlign: "center" }}>
-          <Typography
-            variant="h2"
-            sx={{
-              fontSize: {
-                xs: "4rem",
-                sm: "6rem",
-                md: "8rem",
-                lg: "10rem",
-              },
-            }}
-          >
-            {`${String(Math.floor(time / 3600)).padStart(2, "0")}:${String(
-              Math.floor((time % 3600) / 60)
-            ).padStart(2, "0")}:${String(time % 60).padStart(2, "0")}`}
-          </Typography>
-          <Typography variant="h6">{getStatusMessage()}</Typography>
-        </Box>
-        <Box sx={{ marginTop: "40px", textAlign: "center" }}>
-          <Grid container spacing={2} justifyContent="center">
-            <Grid item>
-              <Tooltip title="Reset Timer" placement="top">
-                <IconButton
-                  onClick={resetTimer}
-                  sx={{
-                    backgroundColor: "#595959",
-                    color: "white",
-                    "&:hover": {
-                      backgroundColor: "#2B2B2B",
-                    },
-                  }}
-                >
-                  <RefreshIcon />
-                </IconButton>
-              </Tooltip>
-              <Typography variant="body2">Reset</Typography>
-            </Grid>
-            <Grid item>
-              <Tooltip title="Stop Timer" placement="top">
-                <IconButton
-                  onClick={stopTimer}
-                  sx={{
-                    backgroundColor: "#FFBD59",
-                    color: "black",
-                    "&:hover": {
-                      backgroundColor: "#e6a94c",
-                    },
-                  }}
-                >
-                  <StopIcon />
-                </IconButton>
-              </Tooltip>
-              <Typography variant="body2">Stop</Typography>
-            </Grid>
-            <Grid item>
-              <Tooltip title="Start Timer" placement="top">
-                <IconButton
-                  onClick={startTimer}
-                  disabled={isRunning || soundPlaying}
-                  sx={{
-                    backgroundColor: "#43B14B",
-                    color: "white",
-                    "&:hover": {
-                      backgroundColor: "#3F9445",
-                    },
-                  }}
-                >
-                  <PlayArrowIcon />
-                </IconButton>
-              </Tooltip>
-              <Typography variant="body2">Start</Typography>
-            </Grid>
-          </Grid>
-        </Box>
-        <Box sx={{ marginTop: "40px", textAlign: "center" }}>
+        <Box sx={{ marginTop: "80px", textAlign: "center" }}>
           <Grid
             container
             spacing={3}
             sx={{
               position: "absolute",
-              bottom: 40,
+              top: "20px",
+              bottom: "20px",
               right: 20,
               justifyContent: "center",
               flexDirection: "row",
             }}
           >
+            <Grid item>
+              <Box
+                sx={{
+                  marginBottom: "10px",
+                  textAlign: "center",
+                  width: "1200px",
+                  marginTop: "100px",
+                }}
+              >
+                <Typography
+                  variant="h2"
+                  sx={{
+                    fontSize: {
+                      xs: "4rem",
+                      sm: "6rem",
+                      md: "8rem",
+                      lg: "10rem",
+                    },
+                  }}
+                >
+                  {`${String(Math.floor(time / 3600)).padStart(
+                    2,
+                    "0"
+                  )}:${String(Math.floor((time % 3600) / 60)).padStart(
+                    2,
+                    "0"
+                  )}:${String(time % 60).padStart(2, "0")}`}
+                </Typography>
+                <Typography variant="h6">{getStatusMessage()}</Typography>
+              </Box>
+            </Grid>
+            <Grid item>
+              <Box
+                sx={{
+                  marginTop: "0px",
+                  marginBottom: "0px",
+                  textAlign: "center",
+                  width: "1500px",
+                }}
+              >
+                <Grid container spacing={2} justifyContent="center">
+                  <Grid item>
+                    <Tooltip title="Reset Timer" placement="top">
+                      <IconButton
+                        onClick={resetTimer}
+                        sx={{
+                          backgroundColor: "#595959",
+                          color: "white",
+                          "&:hover": {
+                            backgroundColor: "#2B2B2B",
+                          },
+                        }}
+                      >
+                        <RefreshIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Typography variant="body2">Reset</Typography>
+                  </Grid>
+                  <Grid item>
+                    <Tooltip title="Stop Timer" placement="top">
+                      <IconButton
+                        onClick={stopTimer}
+                        sx={{
+                          backgroundColor: "#FFBD59",
+                          color: "black",
+                          "&:hover": {
+                            backgroundColor: "#e6a94c",
+                          },
+                        }}
+                      >
+                        <StopIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Typography variant="body2">Stop</Typography>
+                  </Grid>
+                  <Grid item>
+                    <Tooltip title="Start Timer" placement="top">
+                      <IconButton
+                        onClick={startTimer}
+                        sx={{
+                          backgroundColor: "#4CAF50",
+                          color: "white",
+                          "&:hover": {
+                            backgroundColor: "#388E3C",
+                          },
+                        }}
+                      >
+                        <PlayArrowIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Typography variant="body2">Start</Typography>
+                  </Grid>
+                </Grid>
+              </Box>
+            </Grid>
+            {/* Sound Setting ---------------------------*/}
+            <Grid item>
+              <Paper
+                sx={{
+                  padding: "20px",
+                  backgroundColor: "#f0f0f0",
+                  width: "400px",
+                  height: "160px",
+                }}
+              >
+                <Typography variant="h6" gutterBottom>
+                  Sound Settings
+                </Typography>
+                <FormControl component="fieldset" margin="normal">
+                  <FormLabel component="legend">Select Sound Type</FormLabel>
+                  <RadioGroup
+                    aria-label="sound-type"
+                    name="sound-type"
+                    value={soundType}
+                    onChange={(e) => setSoundType(e.target.value)}
+                    row
+                  >
+                    <FormControlLabel
+                      value="original"
+                      control={<Radio />}
+                      label="Original Sound"
+                    />
+                    <FormControlLabel
+                      value="custom"
+                      control={<Radio />}
+                      label="Custom Text"
+                    />
+                  </RadioGroup>
+                  <Button
+                    variant="outlined"
+                    onClick={handleClickOpen}
+                    sx={{ marginTop: "10px" }}
+                  >
+                    Set Custom Text
+                  </Button>
+                </FormControl>
+
+                {/* Pop-up สำหรับ Custom Text */}
+                {soundType === "custom" && (
+                  <>
+                    <Dialog
+                      open={openDialog}
+                      onClose={handleClose}
+                      sx={{
+                        "& .MuiDialog-paper": {
+                          width: "500px",
+                          maxWidth: "90%",
+                        },
+                      }}
+                    >
+                      <DialogTitle sx={{ fontSize: "1.5rem" }}>
+                        Custom Text
+                      </DialogTitle>
+                      <DialogContent>
+                        <TextField
+                          label="Custom Text"
+                          value={customText}
+                          onChange={(e) => setCustomText(e.target.value)}
+                          multiline
+                          rows={3}
+                          variant="outlined"
+                          fullWidth
+                          sx={{ marginTop: 1 }}
+                        />
+                      </DialogContent>
+                      <DialogActions>
+                        <Button onClick={handleClose}>Cancel</Button>
+                        <Button onClick={handleClose} color="primary">
+                          Save
+                        </Button>
+                      </DialogActions>
+                    </Dialog>
+                  </>
+                )}
+              </Paper>
+            </Grid>
             {/* Loop Setting */}
             <Grid item>
               <Paper
                 sx={{
                   padding: "20px",
                   backgroundColor: "#f0f0f0",
-                  width: "350px",
-                  height: "120px",
+                  width: "400px",
+                  height: "160px",
                 }}
               >
                 <Typography
                   variant="h6"
-                  sx={{ textAlign: "left", marginBottom: "15px" }}
+                  sx={{ textAlign: "center", marginBottom: "15px" }}
                 >
                   Loop Setting
                 </Typography>
@@ -373,12 +494,12 @@ const Timer: React.FC = () => {
                   backgroundColor: "#f0f0f0",
                   marginBottom: "0px",
                   width: "400px",
-                  height: "120px",
+                  height: "160px",
                 }}
               >
                 <Typography
                   variant="h6"
-                  sx={{ textAlign: "left", marginBottom: "15px" }}
+                  sx={{ textAlign: "center", marginBottom: "15px" }}
                 >
                   Timer Setting
                 </Typography>
