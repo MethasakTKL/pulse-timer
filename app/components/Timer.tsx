@@ -102,12 +102,18 @@ const Timer: React.FC = () => {
   };
 
   const playSound = () => {
-    setSoundPlaying(true); // Set soundPlaying to true when sound starts
     const audio = new Audio('/sound/notification.mp3'); // Path to your audio file in public
     audio.currentTime = 0; // Start from the beginning of the audio
-    audio.play();
-    
-    // Stop the audio after 4 seconds
+
+    // Check if the audio can play
+    audio.play().then(() => {
+      setSoundPlaying(true); // Set soundPlaying to true when sound starts
+    }).catch(error => {
+      console.error('Audio play failed:', error);
+      alert('Please interact with the page to enable sound.');
+    });
+
+    // Stop the audio after 13 seconds
     setTimeout(() => {
       audio.pause();
       audio.currentTime = 0; // Reset audio position
@@ -255,7 +261,7 @@ const Timer: React.FC = () => {
             <Typography variant="body2">Start</Typography>
           </Grid>
         </Grid>
-        <Typography style={{ marginTop: '10px', fontSize: '13pt' }}>
+        <Typography variant="body1" sx={{ marginTop: '20px' }}>
           {getStatusMessage()}
         </Typography>
       </Container>
