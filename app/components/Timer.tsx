@@ -13,9 +13,9 @@ const theme = createTheme({
     MuiIconButton: {
       styleOverrides: {
         root: {
-          fontSize: '3rem', // Increase icon size
-          width: '100px', // Increase button width
-          height: '100px', // Increase button height
+          fontSize: '3rem', // Adjusted icon size
+          width: '80px', // Adjusted button width
+          height: '80px', // Adjusted button height
         },
       },
     },
@@ -27,6 +27,7 @@ const Timer: React.FC = () => {
   const [minutes, setMinutes] = useState<string>('');
   const [seconds, setSeconds] = useState<string>('');
   const [time, setTime] = useState<number>(0);
+  const [remainingTime, setRemainingTime] = useState<number>(0); // New state for remaining time
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [soundPlaying, setSoundPlaying] = useState<boolean>(false); // New state for sound playing
   const [loopCount, setLoopCount] = useState<number | null>(null); // Number of loops or null for no loop
@@ -67,18 +68,25 @@ const Timer: React.FC = () => {
   }, [isRunning, time, soundPlaying, loopCount, loopForever, hours, minutes, seconds]);
 
   const startTimer = () => {
-    const totalSeconds =
-      parseInt(hours || '0', 10) * 3600 +
-      parseInt(minutes || '0', 10) * 60 +
-      parseInt(seconds || '0', 10);
-    if (totalSeconds > 0 && !soundPlaying) { // Prevent starting the timer if sound is playing
-      setTime(totalSeconds);
+    if (remainingTime > 0 && !soundPlaying) { // Continue from where it stopped
+      setTime(remainingTime);
       setIsRunning(true);
+    } else {
+      const totalSeconds =
+        parseInt(hours || '0', 10) * 3600 +
+        parseInt(minutes || '0', 10) * 60 +
+        parseInt(seconds || '0', 10);
+      if (totalSeconds > 0 && !soundPlaying) { // Prevent starting the timer if sound is playing
+        setTime(totalSeconds);
+        setRemainingTime(totalSeconds); // Set remaining time to the total time
+        setIsRunning(true);
+      }
     }
   };
 
   const stopTimer = () => {
     setIsRunning(false);
+    setRemainingTime(time); // Save remaining time when stopped
   };
 
   const resetTimer = () => {
@@ -88,6 +96,7 @@ const Timer: React.FC = () => {
     setMinutes('');
     setSeconds('');
     setSoundPlaying(false); // Reset soundPlaying when resetting the timer
+    setRemainingTime(0); // Reset remaining time
     setLoopCount(null); // Reset loop count
     setLoopForever(false); // Reset loop forever flag
   };
@@ -119,11 +128,19 @@ const Timer: React.FC = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <Container maxWidth="sm" style={{ textAlign: 'center', marginTop: '50px' }}>
-        {/* <Typography variant="h4" gutterBottom>
-          Timer
-        </Typography> */}
-        <Grid container spacing={2} justifyContent="center">
+      <Container
+        maxWidth="xs" // Use xs for small screens
+        style={{
+          textAlign: 'center',
+          marginTop: '20px', // Adjust marginTop to move content up
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'flex-start', // Align items to the start (top) of the container
+          alignItems: 'center',
+          height: '100vh', // Full viewport height
+        }}
+      >
+        <Grid container spacing={1} justifyContent="center">
           <Grid item xs={3}>
             <TextField
               label="Hours"
@@ -153,7 +170,7 @@ const Timer: React.FC = () => {
           </Grid>
           <Grid item xs={3}>
             <TextField
-              label="Loop Count"
+              label="Loop"
               type="number"
               value={loopCount === null ? '' : loopCount}
               onChange={(e) => setLoopCount(e.target.value ? parseInt(e.target.value, 10) : null)}
@@ -161,8 +178,8 @@ const Timer: React.FC = () => {
             />
           </Grid>
         </Grid>
-        <Grid container spacing={2} justifyContent="center">
-          <Grid item xs={6}>
+        <Grid container spacing={1} justifyContent="center">
+          <Grid item xs={12}>
             <FormControlLabel
               control={<Checkbox checked={loopForever} onChange={(e) => setLoopForever(e.target.checked)} />}
               label="Loop Forever"
@@ -170,15 +187,21 @@ const Timer: React.FC = () => {
           </Grid>
         </Grid>
         <Typography
-          variant="h1"
-          style={{ 
-            margin: '20px 0',
-            fontSize: '120pt', // Set font size in points
+          variant="h2"
+          sx={{
+            margin: '10px 0',
+            fontSize: {
+              xs: '4rem',
+              sm: '6rem',
+              md: '8rem',
+              lg: '12rem'
+            },
+            textAlign: 'center',
           }}
         >
           {`${String(Math.floor(time / 3600)).padStart(2, '0')}:${String(Math.floor((time % 3600) / 60)).padStart(2, '0')}:${String(time % 60).padStart(2, '0')}`}
         </Typography>
-        <Grid container spacing={2} justifyContent="center">
+        <Grid container spacing={1} justifyContent="center">
           <Grid item>
             <Tooltip title="Reset Timer" placement="top">
               <IconButton
@@ -232,7 +255,7 @@ const Timer: React.FC = () => {
             <Typography variant="body2">Start</Typography>
           </Grid>
         </Grid>
-        <Typography variant="body1" style={{ marginTop: '20px' }}>
+        <Typography style={{ marginTop: '10px', fontSize: '13pt' }}>
           {getStatusMessage()}
         </Typography>
       </Container>
