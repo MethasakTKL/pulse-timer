@@ -34,6 +34,7 @@ const Timer: React.FC = () => {
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
+
     if (isRunning && time > 0) {
       timer = setInterval(() => {
         setTime((prevTime) => prevTime - 1);
@@ -45,16 +46,28 @@ const Timer: React.FC = () => {
         setSoundPlayed(true);
       }
       if (loopForever || (loopCount && loopCount > 0)) {
+        const resetTime = parseInt(hours || '0', 10) * 3600 + parseInt(minutes || '0', 10) * 60 + parseInt(seconds || '0', 10);
         if (loopForever) {
-          setTime(parseInt(hours || '0', 10) * 3600 + parseInt(minutes || '0', 10) * 60 + parseInt(seconds || '0', 10));
+          // Start a new loop after sound plays
+          setTimeout(() => {
+            setTime(resetTime);
+            setSoundPlayed(false); // Reset soundPlayed when looping forever
+            setIsRunning(true); // Ensure the timer is running for the new loop
+          }, 4000); // Adjust this delay to match your sound duration
         } else if (loopCount && loopCount > 0) {
           setLoopCount(loopCount - 1);
-          setTime(parseInt(hours || '0', 10) * 3600 + parseInt(minutes || '0', 10) * 60 + parseInt(seconds || '0', 10));
+          // Start a new loop after sound plays
+          setTimeout(() => {
+            setTime(resetTime);
+            setSoundPlayed(false); // Reset soundPlayed for the new loop
+            setIsRunning(true); // Ensure the timer is running for the new loop
+          }, 4000); // Adjust this delay to match your sound duration
         }
       }
     }
+
     return () => clearInterval(timer);
-  }, [isRunning, time, soundPlayed, loopCount, loopForever]);
+  }, [isRunning, time, soundPlayed, loopCount, loopForever, hours, minutes, seconds]);
 
   const startTimer = () => {
     const totalSeconds =
@@ -85,7 +98,14 @@ const Timer: React.FC = () => {
 
   const playSound = () => {
     const audio = new Audio('/sound/notification.mp3'); // Path to your audio file in public
+    audio.currentTime = 0; // Start from the beginning of the audio
     audio.play();
+    
+    // Stop the audio after 4 seconds
+    setTimeout(() => {
+      audio.pause();
+      audio.currentTime = 0; // Reset audio position
+    }, 4000);
   };
 
   return (
@@ -155,10 +175,10 @@ const Timer: React.FC = () => {
               <IconButton
                 onClick={resetTimer}
                 sx={{
-                  backgroundColor: '#595959', // Red color for Reset
+                  backgroundColor: '#595959', // Gray color for Reset
                   color: 'white', // Icon color
                   '&:hover': {
-                    backgroundColor: '#2B2B2B', // Darker red on hover
+                    backgroundColor: '#2B2B2B', // Darker gray on hover
                   },
                 }}
               >
