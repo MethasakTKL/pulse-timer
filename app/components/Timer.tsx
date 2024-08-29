@@ -191,8 +191,8 @@ const Timer: React.FC = () => {
           sx={{
             margin: '10px 0',
             fontSize: {
-              xs: '4rem',
-              sm: '6rem',
+              xs: '6rem',
+              sm: '7rem',
               md: '8rem',
               lg: '12rem'
             },
