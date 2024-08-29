@@ -185,7 +185,6 @@ const Timer: React.FC = () => {
           justifyContent: "center",
           alignItems: "center",
           height: "100vh",
-          overflow: "hidden", 
         }}
       >
         {/* Current Date & Time */}
@@ -237,108 +236,6 @@ const Timer: React.FC = () => {
           </Typography>
           <Typography variant="h6">{getStatusMessage()}</Typography>
         </Box>
-
-        <Grid
-          container
-          spacing={3}
-          sx={{ position: "absolute", bottom: 0, left: 20 }}
-        >
-          {/* Timer Setting */}
-          <Grid item>
-            <Paper
-              sx={{
-                padding: "20px",
-                backgroundColor: "#f0f0f0",
-                marginBottom: "40px",
-                width: "200px",
-                height: "250px",
-                marginLeft:"20px",
-              }}
-            >
-              <Typography
-                variant="h6"
-                sx={{ textAlign: "left", marginBottom: "15px" }}
-              >
-                Timer Setting
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <TextField
-                    label="Hours"
-                    type="number"
-                    value={hours}
-                    onChange={(e) => setHours(e.target.value)}
-                    fullWidth
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    label="Minutes"
-                    type="number"
-                    value={minutes}
-                    onChange={(e) => setMinutes(e.target.value)}
-                    fullWidth
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    label="Seconds"
-                    type="number"
-                    value={seconds}
-                    onChange={(e) => setSeconds(e.target.value)}
-                    fullWidth
-                  />
-                </Grid>
-              </Grid>
-            </Paper>
-          </Grid>
-
-          {/* Loop Setting */}
-          <Grid item>
-            <Paper
-              sx={{
-                padding: "20px",
-                backgroundColor: "#f0f0f0",
-                width: "150px",
-                height: "250px",
-              }}
-            >
-              <Typography
-                variant="h6"
-                sx={{ textAlign: "left", marginBottom: "15px" }}
-              >
-                Loop Setting
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <TextField
-                    label="Loop"
-                    type="number"
-                    value={loopCount === null ? "" : loopCount}
-                    onChange={(e) =>
-                      setLoopCount(
-                        e.target.value ? parseInt(e.target.value, 10) : null
-                      )
-                    }
-                    fullWidth
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={loopForever}
-                        onChange={(e) => setLoopForever(e.target.checked)}
-                      />
-                    }
-                    label="Loop Forever"
-                  />
-                </Grid>
-              </Grid>
-            </Paper>
-          </Grid>
-        </Grid>
-
         <Box sx={{ marginTop: "40px", textAlign: "center" }}>
           <Grid container spacing={2} justifyContent="center">
             <Grid item>
@@ -392,6 +289,112 @@ const Timer: React.FC = () => {
                 </IconButton>
               </Tooltip>
               <Typography variant="body2">Start</Typography>
+            </Grid>
+          </Grid>
+        </Box>
+        <Box sx={{ marginTop: "40px", textAlign: "center" }}>
+          <Grid
+            container
+            spacing={3}
+            sx={{
+              position: "absolute",
+              bottom: 40,
+              right: 20,
+              justifyContent: "center",
+              flexDirection: "row",
+            }}
+          >
+            {/* Loop Setting */}
+            <Grid item>
+              <Paper
+                sx={{
+                  padding: "20px",
+                  backgroundColor: "#f0f0f0",
+                  width: "350px",
+                  height: "120px",
+                }}
+              >
+                <Typography
+                  variant="h6"
+                  sx={{ textAlign: "left", marginBottom: "15px" }}
+                >
+                  Loop Setting
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={5}>
+                    <TextField
+                      label="Loop"
+                      type="number"
+                      value={loopCount === null ? "" : loopCount}
+                      onChange={(e) =>
+                        setLoopCount(
+                          e.target.value ? parseInt(e.target.value, 10) : null
+                        )
+                      }
+                      fullWidth
+                    />
+                  </Grid>
+                  <Grid item xs={7}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={loopForever}
+                          onChange={(e) => setLoopForever(e.target.checked)}
+                        />
+                      }
+                      label="Loop Forever"
+                    />
+                  </Grid>
+                </Grid>
+              </Paper>
+            </Grid>
+            {/* Timer Setting */}
+            <Grid item>
+              <Paper
+                sx={{
+                  padding: "20px",
+                  backgroundColor: "#f0f0f0",
+                  marginBottom: "0px",
+                  width: "400px",
+                  height: "120px",
+                }}
+              >
+                <Typography
+                  variant="h6"
+                  sx={{ textAlign: "left", marginBottom: "15px" }}
+                >
+                  Timer Setting
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={4}>
+                    <TextField
+                      label="Hours"
+                      type="number"
+                      value={hours}
+                      onChange={(e) => setHours(e.target.value)}
+                      fullWidth
+                    />
+                  </Grid>
+                  <Grid item xs={4}>
+                    <TextField
+                      label="Minutes"
+                      type="number"
+                      value={minutes}
+                      onChange={(e) => setMinutes(e.target.value)}
+                      fullWidth
+                    />
+                  </Grid>
+                  <Grid item xs={4}>
+                    <TextField
+                      label="Seconds"
+                      type="number"
+                      value={seconds}
+                      onChange={(e) => setSeconds(e.target.value)}
+                      fullWidth
+                    />
+                  </Grid>
+                </Grid>
+              </Paper>
             </Grid>
           </Grid>
         </Box>
