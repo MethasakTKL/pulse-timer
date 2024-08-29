@@ -28,7 +28,7 @@ const Timer: React.FC = () => {
   const [seconds, setSeconds] = useState<string>('');
   const [time, setTime] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [soundPlayed, setSoundPlayed] = useState<boolean>(false);
+  const [soundPlaying, setSoundPlaying] = useState<boolean>(false); // New state for sound playing
   const [loopCount, setLoopCount] = useState<number | null>(null); // Number of loops or null for no loop
   const [loopForever, setLoopForever] = useState<boolean>(false); // Loop forever flag
 
@@ -41,9 +41,8 @@ const Timer: React.FC = () => {
       }, 1000);
     } else if (time === 0 && isRunning) {
       setIsRunning(false);
-      if (!soundPlayed) {
+      if (!soundPlaying) {
         playSound();
-        setSoundPlayed(true);
       }
       if (loopForever || (loopCount && loopCount > 0)) {
         const resetTime = parseInt(hours || '0', 10) * 3600 + parseInt(minutes || '0', 10) * 60 + parseInt(seconds || '0', 10);
@@ -51,7 +50,6 @@ const Timer: React.FC = () => {
           // Start a new loop after sound plays
           setTimeout(() => {
             setTime(resetTime);
-            setSoundPlayed(false); // Reset soundPlayed when looping forever
             setIsRunning(true); // Ensure the timer is running for the new loop
           }, 4000); // Adjust this delay to match your sound duration
         } else if (loopCount && loopCount > 0) {
@@ -59,7 +57,6 @@ const Timer: React.FC = () => {
           // Start a new loop after sound plays
           setTimeout(() => {
             setTime(resetTime);
-            setSoundPlayed(false); // Reset soundPlayed for the new loop
             setIsRunning(true); // Ensure the timer is running for the new loop
           }, 4000); // Adjust this delay to match your sound duration
         }
@@ -67,17 +64,16 @@ const Timer: React.FC = () => {
     }
 
     return () => clearInterval(timer);
-  }, [isRunning, time, soundPlayed, loopCount, loopForever, hours, minutes, seconds]);
+  }, [isRunning, time, soundPlaying, loopCount, loopForever, hours, minutes, seconds]);
 
   const startTimer = () => {
     const totalSeconds =
       parseInt(hours || '0', 10) * 3600 +
       parseInt(minutes || '0', 10) * 60 +
       parseInt(seconds || '0', 10);
-    if (totalSeconds > 0) {
+    if (totalSeconds > 0 && !soundPlaying) { // Prevent starting the timer if sound is playing
       setTime(totalSeconds);
       setIsRunning(true);
-      setSoundPlayed(false); // Reset soundPlayed when starting a new timer
     }
   };
 
@@ -91,12 +87,13 @@ const Timer: React.FC = () => {
     setHours('');
     setMinutes('');
     setSeconds('');
-    setSoundPlayed(false); // Reset soundPlayed when resetting the timer
+    setSoundPlaying(false); // Reset soundPlaying when resetting the timer
     setLoopCount(null); // Reset loop count
     setLoopForever(false); // Reset loop forever flag
   };
 
   const playSound = () => {
+    setSoundPlaying(true); // Set soundPlaying to true when sound starts
     const audio = new Audio('/sound/notification.mp3'); // Path to your audio file in public
     audio.currentTime = 0; // Start from the beginning of the audio
     audio.play();
@@ -105,15 +102,27 @@ const Timer: React.FC = () => {
     setTimeout(() => {
       audio.pause();
       audio.currentTime = 0; // Reset audio position
+      setSoundPlaying(false); // Reset soundPlaying when sound stops
     }, 4000);
+  };
+
+  // Determine the status message
+  const getStatusMessage = () => {
+    if (loopForever) {
+      return 'Running timer loop forever until stopped.';
+    } else if (loopCount !== null && loopCount > 0) {
+      return `Remaining loops: ${loopCount}`;
+    } else {
+      return 'Timer not looping.';
+    }
   };
 
   return (
     <ThemeProvider theme={theme}>
       <Container maxWidth="sm" style={{ textAlign: 'center', marginTop: '50px' }}>
-        <Typography variant="h4" gutterBottom>
+        {/* <Typography variant="h4" gutterBottom>
           Timer
-        </Typography>
+        </Typography> */}
         <Grid container spacing={2} justifyContent="center">
           <Grid item xs={3}>
             <TextField
@@ -208,7 +217,7 @@ const Timer: React.FC = () => {
             <Tooltip title="Start Timer" placement="top">
               <IconButton
                 onClick={startTimer}
-                disabled={isRunning}
+                disabled={isRunning || soundPlaying} // Disable Start button when sound is playing
                 sx={{
                   backgroundColor: '#43B14B', // Green color for Start
                   color: 'white', // Icon color
@@ -223,6 +232,9 @@ const Timer: React.FC = () => {
             <Typography variant="body2">Start</Typography>
           </Grid>
         </Grid>
+        <Typography variant="body1" style={{ marginTop: '20px' }}>
+          {getStatusMessage()}
+        </Typography>
       </Container>
     </ThemeProvider>
   );
