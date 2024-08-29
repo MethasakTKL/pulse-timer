@@ -172,7 +172,7 @@ const Timer: React.FC = () => {
     if (soundType === "original") {
       const audio = new Audio("/sound/notification.mp3");
       audio.currentTime = 0;
-  
+
       audio
         .play()
         .then(() => {
@@ -182,7 +182,7 @@ const Timer: React.FC = () => {
           console.error("Audio play failed:", error);
           alert("Please interact with the page to enable sound.");
         });
-  
+
       setTimeout(() => {
         audio.pause();
         audio.currentTime = 0;
@@ -190,10 +190,10 @@ const Timer: React.FC = () => {
       }, 13000);
     } else if (soundType === "custom" && customText) {
       const utterance = new SpeechSynthesisUtterance(customText);
-  
+
       // ตั้งค่าภาษาเป็นภาษาไทย
       utterance.lang = "th-TH";
-  
+
       window.speechSynthesis.speak(utterance);
     }
   };
@@ -394,15 +394,16 @@ const Timer: React.FC = () => {
                       label="Custom Text"
                     />
                   </RadioGroup>
-                  <Button
-                    variant="outlined"
-                    onClick={handleClickOpen}
-                    sx={{ marginTop: "10px" }}
-                  >
-                    Set Custom Text
-                  </Button>
+                  {soundType === "custom" && (
+                    <Button
+                      variant="outlined"
+                      onClick={handleClickOpen}
+                      sx={{ marginTop: "10px" }}
+                    >
+                      Set Custom Text
+                    </Button>
+                  )}
                 </FormControl>
-
                 {/* Pop-up สำหรับ Custom Text */}
                 {soundType === "custom" && (
                   <>
